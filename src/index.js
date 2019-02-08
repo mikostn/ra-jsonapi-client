@@ -37,6 +37,8 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
     headers: settings.headers,
   };
 
+  console.log('request', type, resource, params);
+
   switch (type) {
     case GET_LIST: {
       const { page, perPage } = params.pagination;
@@ -99,11 +101,26 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       break;
 
     case GET_MANY: {
-      const query = stringify({
-        'filter[id]': params.ids,
-      }, { arrayFormat: settings.arrayFormat });
+// <<<<<<< e224d4b7e38210f68a99df771c6987446e243fa0
+      // const query = stringify({
+      //   'filter[id]': params.ids,
+      // }, { arrayFormat: settings.arrayFormat });
+      //
+      // url = `${apiUrl}/${resource}?${query}`;
+// =======
+      // const query = {
+      //   filter: JSON.stringify({ id: params.ids }),
+      // };
+      // url = `${apiUrl}/${resource}?${stringify(query)}`;
+      // break;
+      console.log(params);
+      const { ids } = params;
 
+      console.log(ids.map(id => (id.data ? id.data.id : '')))
+
+      const query = ids.map(id => `filter[id]=${id.data}`).join('&');
       url = `${apiUrl}/${resource}?${query}`;
+      console.log(params, ids, query, url);
       break;
     }
 
@@ -148,34 +165,64 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         total = total || response.data.data.length;
       }
 
+      console.log('response', type, response.data.data);
       switch (type) {
         case GET_MANY:
         case GET_LIST: {
+          const data = response.data.data.map(value => Object.assign(
+            { id: value.id },
+            value.attributes,
+            { relationships: value.relationships },
+          ));
+          console.log(data);
           return {
-            data: response.data.data.map(value => Object.assign(
-              { id: value.id },
-              value.attributes,
-            )),
-            total,
+// <<<<<<< e224d4b7e38210f68a99df771c6987446e243fa0
+//             data: response.data.data.map(value => Object.assign(
+//               { id: value.id },
+//               value.attributes,
+//             )),
+//             total,
+// =======
+            data,
+            total: response.data.meta[settings.total],
+// >>>>>>> [WIP] relationships
           };
         }
 
+        // case GET_MANY_REFERENCE: {
+        //   return {
+        //     data: response.data.data.map(value => Object.assign(
+        //       { id: value.id },
+        //       value.attributes,
+        //       // { relationships: value.relationships },
+        //     )),
+        //     total: response.data.meta[settings.total],
+        //   };
+        // }
+
         case GET_MANY_REFERENCE: {
+          const rawdata = response.data.data;
+          const data = rawdata.map(e => ({ ...e.attributes, id: e.id }));
           return {
-            data: response.data.data.map(value => Object.assign(
-              { id: value.id },
-              value.attributes,
-            )),
-            total,
+// <<<<<<< e224d4b7e38210f68a99df771c6987446e243fa0
+            // data: response.data.data.map(value => Object.assign(
+            //   { id: value.id },
+            //   value.attributes,
+            // )),
+            // total,
+// =======
+            data,
+            total: data.length,
+// >>>>>>> [WIP] relationships
           };
         }
 
         case GET_ONE: {
-          const { id, attributes } = response.data.data;
-
+          const { id, attributes, relationships } = response.data.data;
+          console.log(relationships);
           return {
             data: {
-              id, ...attributes,
+              id, ...attributes, relationships
             },
           };
         }
