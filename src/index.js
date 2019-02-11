@@ -98,20 +98,28 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       break;
 
     case GET_MANY: {
+      console.log(params);
       // const query = {
       //   filter: JSON.stringify({ id: params.ids }),
       // };
       // url = `${apiUrl}/${resource}?${stringify(query)}`;
       // break;
-      console.log(params);
+
+      // const { ids } = params;
+      //
+      // const query = ids.map(id => `filter[id]=${id}`).join('&');
+      // url = `${apiUrl}/${resource}?${query}`;
+      // console.log(params, ids, query, url);
+      // break;
+
       const { ids } = params;
 
-      console.log(ids.map(id => (id.data ? id.data.id : '')))
-
-      const query = ids.map(id => `filter[id]=${id.data}`).join('&');
+      // const query = ids.map(id => `filter[id]=${id}`).join('&');
+      const query = `filter=[{"name":"id", "op":"in_", "val":[${ids.map(id => `"${id}"`).join(',')}]}]`
       url = `${apiUrl}/${resource}?${query}`;
       console.log(params, ids, query, url);
       break;
+
     }
 
     case GET_MANY_REFERENCE: {
