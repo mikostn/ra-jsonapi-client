@@ -79,17 +79,26 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
     case UPDATE: {
       url = `${apiUrl}/${resource}/${params.id}`;
 
-      const attributes = params.data;
-      delete attributes.id;
+      let { relationships, id, ..._data } = params.data;
+      Object.keys(relationships || {}).forEach((key) => {
+        relationships[key].data.type = 'picoid'
+        delete relationships[key].links
+      })
+      console.log('relationships', relationships, ',data:', _data);
+      console.log('relationships', relationships)
 
       const data = {
         data: {
           id: params.id,
           type: resource,
-          attributes,
+          attributes: _data,
+          relationships: relationships,
         },
       };
 
+      console.log('case: ', type, resource, data);
+
+      // options.method = 'PATCH';
       options.method = settings.updateMethod;
       options.data = JSON.stringify(data);
       break;
