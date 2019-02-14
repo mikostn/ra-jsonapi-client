@@ -30,9 +30,14 @@ export default () => {
 
   // Response interceptor
   axios.interceptors.response.use(
-    response => response,
+    response => {
+      console.log(response);
+      return response;
+    },
     (error) => {
+      console.error(error);
       const { status, data } = error.response;
+      console.log(status, data);
 
       if (status < 200 || status >= 300) {
         return Promise.reject(
