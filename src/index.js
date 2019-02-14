@@ -37,7 +37,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
     headers: settings.headers,
   };
 
-  console.log('request', type, resource, params);
+  console.log('request', type, resource, 'params:', params);
 
   switch (type) {
     case GET_LIST: {
@@ -80,12 +80,26 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       url = `${apiUrl}/${resource}/${params.id}`;
 
       let { relationships, id, ..._data } = params.data;
+
+      // relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
+
       Object.keys(relationships || {}).forEach((key) => {
-        relationships[key].data.type = 'picoid'
-        delete relationships[key].links
+        console.log(relationships[key]);
+        if(relationships[key].many) {
+          console.log('mane');
+          relationships[key].data = relationships[key].ids.map(id => ({type: key, id: id}))
+        } else{
+          relationships[key].data = {
+            type: key,
+            id: relationships[key].ids
+          }
+        }
+
+        // delete relationships[key].links
+        delete relationships[key].ids
+        delete relationships[key].many
       })
       console.log('relationships', relationships, ',data:', _data);
-      console.log('relationships', relationships)
 
       const data = {
         data: {
@@ -125,7 +139,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       const { ids } = params;
 
       // const query = ids.map(id => `filter[id]=${id}`).join('&');
-      const query = `filter=[{"name":"id", "op":"in_", "val":[${ids.map(id => `"${id}"`).join(',')}]}]`
+      const query = `filter=[{"name":"id", "op":"in_", "val":[${ids.map(id => `"${id.id || id}"`).join(',')}]}]`
       url = `${apiUrl}/${resource}?${query}`;
       console.log(params, ids, query, url);
       break;
@@ -163,12 +177,25 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       switch (type) {
         case GET_MANY:
         case GET_LIST: {
-          const data = response.data.data.map(value => Object.assign(
-            { id: value.id },
-            value.attributes,
-            { relationships: value.relationships },
-          ));
-          console.log(data);
+          const data = response.data.data.map(value => {
+
+            const relationships = value.relationships
+            Object.keys(relationships || {}).forEach((key) => {
+              if(relationships[key].data != null) {
+                // check if data is single object (with id param) or else array of objects
+                relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
+                relationships[key].many = relationships[key].data.id ? false : true;
+              }
+              delete relationships[key].data
+              delete relationships[key].links
+            })
+
+            return Object.assign(
+              { id: value.id },
+              value.attributes,
+              { relationships: relationships },
+            )});
+          console.log(type, 'data: ', data);
           return {
             data,
             total: response.data.meta[settings.total],
@@ -189,6 +216,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         case GET_MANY_REFERENCE: {
           const rawdata = response.data.data;
           const data = rawdata.map(e => ({ ...e.attributes, id: e.id }));
+          console.log(type, 'data: ', data);
           return {
             data,
             total: data.length,
@@ -197,11 +225,23 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
 
         case GET_ONE: {
           const { id, attributes, relationships } = response.data.data;
-          console.log(relationships);
+
+          Object.keys(relationships || {}).forEach((key) => {
+            if(relationships[key].data != null) {
+              // check if data is single object (with id param) or else array of objects
+              relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
+              relationships[key].many = relationships[key].data.id ? false : true;
+            }
+            delete relationships[key].data
+            delete relationships[key].links
+          })
+          const data = {
+            id, ...attributes, relationships
+          }
+          console.log(type, 'data: ', data);
+
           return {
-            data: {
-              id, ...attributes, relationships
-            },
+            data,
           };
         }
 
