@@ -8,11 +8,15 @@ export class NotImplementedError extends Error {
 }
 
 export class HttpError extends Error {
-  constructor(message, status) {
+  constructor(message, status, body = null) {
+    console.log(status, 'message', message);
     super(message);
 
-    this.message = message;
+    console.log(status, 'message', message);
+
+    this.message = message.msg || JSON.stringify(message);
     this.status = status;
+    this.body = body;
     this.name = 'HttpError';
   }
 }
