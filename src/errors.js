@@ -12,7 +12,7 @@ export class HttpError extends Error {
     console.log(status, 'data', data);
     super(data);
     // for (let message of data) {}
-    const message = data.errors[0];
+    const message = data.errors[0] || data;
     console.log(status, 'message', message);
     this.message = `${message.title}: ${message.detail}`;
     this.status = status;

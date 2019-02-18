@@ -147,7 +147,8 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       const { ids } = params;
 
       // const query = ids.map(id => `filter[id]=${id}`).join('&');
-      const query = `filter=[{"name":"id", "op":"in_", "val":[${ids.map(id => `"${id.id || id}"`).join(',')}]}]`
+      console.log(`"${ids.map(id => id.id || id).filter(id => id ? true : false).join('","')}"`);
+      const query = `filter=[{"name":"id", "op":"in_", "val":["${ids.map(id => id.id || id).filter(id => id ? true : false).join('","')}"]}]`
       url = `${apiUrl}/${resource}?${query}`;
       console.log(params, ids, query, url);
       break;
@@ -207,6 +208,9 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
                 // check if data is single object (with id param) or else array of objects
                 relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
                 relationships[key].many = relationships[key].data.id ? false : true;
+              }else{
+                relationships[key].ids = '';
+                relationships[key].many = false;
               }
               delete relationships[key].data
               delete relationships[key].links
