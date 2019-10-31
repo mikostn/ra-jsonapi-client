@@ -37,7 +37,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
     headers: settings.headers,
   };
 
-  console.log('request', type, resource, 'params:', params);
+  console.log('request', 'type:', type, 'resource:', resource, 'params:', params);
 
   switch (type) {
     case GET_LIST: {
@@ -50,9 +50,15 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       };
 
       // Add all filter params to query.
+      // let filter = false;
       Object.keys(params.filter || {}).forEach((key) => {
-        query[`filter[${key}]`] = params.filter[key];
+        // query[`filter[${key}]`] = params.filter[key];
+        query['filter'] = `[{"name":"${key}","op":"like","val":"${params.filter[key]}%"}]`;
+        // query[`filter[{"name":"name","op":"like","val":"birth_date"}]`]
       });
+      console.log(query);
+      // /persons?filter=[{"name":"name","op":"eq","field":"birth_date"}] HTTP/1.1
+      // "op":"ilike"
 
       // Add sort parameter
       if (params.sort && params.sort.field) {
@@ -61,6 +67,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       }
 
       url = `${apiUrl}/${resource}?${stringify(query)}`;
+      console.log(url);
       break;
     }
 
@@ -168,6 +175,9 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       Object.keys(params.filter || {}).forEach((key) => {
         query[`filter[${key}]`] = params.filter[key];
       });
+
+      query[`filter[${key}]`] = params.filter[key];
+      console.log(query);
 
       // Add the reference id to the filter params.
       query[`filter[${params.target}]`] = params.id;
