@@ -90,23 +90,38 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
 
       // relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
 
+      // console.log(relationships);
+      debugger;
       Object.keys(relationships || {}).forEach((key) => {
-        console.log(relationships[key]);
+        // console.log(relationships[key]);
+        // console.warn(relationships[key].ids);
+
+        if(Object.keys(relationships[key]) == 0 || relationships[key].ids.length == 0){
+          delete relationships[key]
+          return
+        }
+        let labe = key;
+        if(key == 'parent_picoid'){
+          labe = 'picoid'
+          console.warn('label overwrite!', key, labe);
+          debugger;
+        }
         if(relationships[key].many) {
-          console.log('mane');
-          relationships[key].data = relationships[key].ids.map(id => ({type: key, id: id}))
-        } else{
+          // console.log('mane');
+          relationships[key].data = relationships[key].ids.map(id => ({type: labe, id: id}))
+        }else{
           relationships[key].data = {
-            type: key,
+            type: labe,
             id: relationships[key].ids
           }
         }
 
         // delete relationships[key].links
-        delete relationships[key].ids
-        delete relationships[key].many
+        // delete relationships[key].ids
+        // delete relationships[key].many
       })
-      console.log('relationships', relationships, ',data:', _data);
+      // console.log({'relationships': relationships, 'data': _data});
+      // debugger;
 
       const data = {
         data: {
