@@ -100,18 +100,19 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
           delete relationships[key]
           return
         }
-        let labe = key;
-        if(key == 'parent_picoid'){
-          labe = 'picoid'
-          console.warn('label overwrite!', key, labe);
-          debugger;
-        }
+        // let labe = key;
+        // if(key == 'parent_picoid'){
+        //   labe = 'picoid'
+        //   console.warn('label overwrite!', key, labe);
+        //   debugger;
+        // }
+        let type = relationships[key].type[0]
         if(relationships[key].many) {
           // console.log('mane');
-          relationships[key].data = relationships[key].ids.map(id => ({type: labe, id: id}))
+          relationships[key].data = relationships[key].ids.map(id => ({type: type, id: id}))
         }else{
           relationships[key].data = {
-            type: labe,
+            type: type,
             id: relationships[key].ids
           }
         }
@@ -210,6 +211,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
               if(relationships[key].data != null) {
                 // check if data is single object (with id param) or else array of objects
                 relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
+                relationships[key].type = relationships[key].data.type || relationships[key].data.map(_data => _data.type);
                 relationships[key].many = relationships[key].data.id ? false : true;
               }else{
                 relationships[key].ids = '';
@@ -259,6 +261,7 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
             if(relationships[key].data != null) {
               // check if data is single object (with id param) or else array of objects
               relationships[key].ids = relationships[key].data.id || relationships[key].data.map(_data => _data.id);
+              relationships[key].type = relationships[key].data.type || relationships[key].data.map(_data => _data.type);
               relationships[key].many = relationships[key].data.id ? false : true;
             }
             delete relationships[key].data
