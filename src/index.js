@@ -170,10 +170,15 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
       const { ids } = params;
 
       // const query = ids.map(id => `filter[id]=${id}`).join('&');
+      console.log('ids', ids)
       console.log(`"${ids.map(id => id.id || id).filter(id => id ? true : false).join('","')}"`);
+      if(ids.length) {
       const query = `filter=[{"name":"id", "op":"in_", "val":["${ids.map(id => id.id || id).filter(id => id ? true : false).join('","')}"]}]`
       url = `${apiUrl}/${resource}?${query}`;
       console.log(params, ids, query, url);
+      }else{
+        return { data: []}
+      }
       break;
 
     }
