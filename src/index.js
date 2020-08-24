@@ -180,7 +180,6 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         return { data: []}
       }
       break;
-
     }
 
     case GET_MANY_REFERENCE: {
@@ -192,18 +191,34 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         'page[size]': perPage,
       };
 
+      // let to_many = params.filter['to_many'] || false;
+      // delete params.filter['to_many'];
+      console.log(params.target, params.target.slice(-5));
+      let to_many = params.target.slice(-5) == '~many' ? true : false;
+
+      console.log('filter:', params.filter, 'to_many:', to_many);
+
       // Add all filter params to query.
       Object.keys(params.filter || {}).forEach((key) => {
-        query[`filter[${key}]`] = params.filter[key];
+        // =[{"name":"computers__serial","op":"ilike","val":"%Amstrad%"}]
+          query[`filter[${key}]`] = params.filter[key];
       });
 
-      query[`filter[${key}]`] = params.filter[key];
+      // Add the reference id to the filter params.
+      if(to_many){
+        // resource = resource.slice(0, -1)
+        // query[`filter`] = `[{"name":"${params.target}__id","op":"eq","val":"${params.id}"}]`;
+        // query[`filter`] = `[{"name":"${params.target}","op":"any","val":{"name":"id","op":"eq","val":"${params.id}"}}]`
+        query[`filter`] = `[{"name":"${params.target.slice(0, -5)}","op":"any","val":{"name":"id","op":"eq","val":"${params.id}"}}]`
+      }else{
+        query[`filter[${params.target}]`] = params.id;
+      }
+
+      // query[`filter[${key}]`] = params.filter[key];
       console.log(query);
 
-      // Add the reference id to the filter params.
-      query[`filter[${params.target}]`] = params.id;
-
       url = `${apiUrl}/${resource}?${stringify(query)}`;
+      console.log(url);
       break;
     }
 
@@ -280,9 +295,8 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         // }
 
         case GET_MANY_REFERENCE: {
-          const rawdata = response.data.data;
-          const data = rawdata.map(e => ({ ...e.attributes, id: e.id }));
-          console.log(type, 'data: ', data);
+          const data = response.data.data.map(e => ({ ...e.attributes, id: e.id }));
+          console.log(type, 'data: ', data, data.length);
           return {
 // <<<<<<< e224d4b7e38210f68a99df771c6987446e243fa0
             // data: response.data.data.map(value => Object.assign(
