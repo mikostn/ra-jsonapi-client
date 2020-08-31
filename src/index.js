@@ -186,12 +186,19 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         'page[size]': perPage,
       };
 
-      // let to_many = params.filter['to_many'] || false;
-      // delete params.filter['to_many'];
-      console.log(params.target, params.target.slice(-5));
-      let to_many = params.target.slice(-5) == '~many' ? true : false;
 
-      console.log('filter:', params.filter, 'to_many:', to_many);
+      // let to_many = false
+      let [target, target_query_params=''] = params.target.split('?');
+
+      var searchParams = new URLSearchParams(target_query_params);
+      let to_many = searchParams.has('many')
+      let includes = searchParams.get('include')
+
+      console.log('filter:', params.filter, 'to_many:', to_many, 'include', includes);
+
+      if(includes)
+        query['include'] = includes
+
 
       // Add all filter params to query.
       Object.keys(params.filter || {}).forEach((key) => {
@@ -204,9 +211,9 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
         // resource = resource.slice(0, -1)
         // query[`filter`] = `[{"name":"${params.target}__id","op":"eq","val":"${params.id}"}]`;
         // query[`filter`] = `[{"name":"${params.target}","op":"any","val":{"name":"id","op":"eq","val":"${params.id}"}}]`
-        query[`filter`] = `[{"name":"${params.target.slice(0, -5)}","op":"any","val":{"name":"id","op":"eq","val":"${params.id}"}}]`
+        query[`filter`] = `[{"name":"${target}","op":"any","val":{"name":"id","op":"eq","val":"${params.id}"}}]`
       }else{
-        query[`filter[${params.target}]`] = params.id;
+        query[`filter[${target}]`] = params.id;
       }
 
       // query[`filter[${key}]`] = params.filter[key];
