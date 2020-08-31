@@ -116,6 +116,9 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
             id: relationships[key].ids
           }
         }
+        delete relationships[key].type
+        delete relationships[key].ids
+        delete relationships[key].many
 
         // delete relationships[key].links
         // delete relationships[key].ids
