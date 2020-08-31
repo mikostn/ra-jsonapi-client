@@ -35,11 +35,13 @@ export default () => {
       return response;
     },
     (error) => {
-      console.error(error);
+      console.error('error', error);
+      console.log('error.response', error.response);
       const { status, data } = error.response;
-      console.log(status, data);
+      console.log('status, data', status, data);
 
       if (status < 200 || status >= 300) {
+        console.log('Rejecting as HttpError');
         return Promise.reject(
           new HttpError(data, status),
         );
